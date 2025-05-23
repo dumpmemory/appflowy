@@ -6,6 +6,7 @@ import 'package:appflowy/workspace/application/action_navigation/action_navigati
 import 'package:appflowy/workspace/application/action_navigation/navigation_action.dart';
 import 'package:appflowy/workspace/application/command_palette/command_palette_bloc.dart';
 import 'package:appflowy/workspace/application/command_palette/search_result_ext.dart';
+import 'package:appflowy/workspace/presentation/command_palette/widgets/search_icon.dart';
 import 'package:appflowy_backend/protobuf/flowy-search/result.pb.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:appflowy_ui/appflowy_ui.dart';
@@ -19,12 +20,14 @@ class SearchSummaryCell extends StatefulWidget {
     required this.summary,
     required this.maxWidth,
     required this.theme,
+    required this.textStyle,
     super.key,
   });
 
   final SearchSummaryPB summary;
   final double maxWidth;
   final AppFlowyThemeData theme;
+  final TextStyle textStyle;
 
   @override
   State<SearchSummaryCell> createState() => _SearchSummaryCellState();
@@ -42,9 +45,7 @@ class _SearchSummaryCellState extends State<SearchSummaryCell> {
   double get maxWidth => widget.maxWidth;
   AppFlowyThemeData get theme => widget.theme;
 
-  TextStyle get textStyle => theme.textStyle.body.standard(
-        color: theme.textColorScheme.primary,
-      );
+  TextStyle get textStyle => widget.textStyle;
 
   TextStyle get showMoreStyle => theme.textStyle.body.standard(
         color: theme.textColorScheme.secondary,
@@ -337,6 +338,8 @@ class ReferenceSources extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppFlowyTheme.of(context);
+    final bloc = context.read<CommandPaletteBloc?>(), state = bloc?.state;
+
     return Container(
       decoration: ShapeDecoration(
         color: theme.surfaceColorScheme.primary,
@@ -365,6 +368,8 @@ class ReferenceSources extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 final source = sources[index];
+                final view = state?.cachedViews[source.id];
+
                 final displayName = source.displayName.isEmpty
                     ? LocaleKeys.menuAppHeader_defaultNewPageName.tr()
                     : source.displayName;
@@ -397,7 +402,10 @@ class ReferenceSources extends StatelessWidget {
                     children: [
                       SizedBox.square(
                         dimension: 20,
-                        child: Center(child: buildIcon(source.icon, theme)),
+                        child: Center(
+                          child: view?.buildIcon(context) ??
+                              source.icon.buildIcon(context),
+                        ),
                       ),
                       HSpace(8),
                       Flexible(
@@ -431,9 +439,9 @@ class ReferenceSources extends StatelessWidget {
 
   Widget buildIcon(ResultIconPB icon, AppFlowyThemeData theme) {
     if (icon.ty == ResultIconTypePB.Emoji) {
-      return icon.getIcon(size: 16, lineHeight: 20 / 16) ?? SizedBox.shrink();
+      return icon.getIcon(size: 16, lineHeight: 21 / 16) ?? SizedBox.shrink();
     } else {
-      return icon.getIcon(size: 20, iconColor: theme.iconColorScheme.primary) ??
+      return icon.getIcon(iconColor: theme.iconColorScheme.primary) ??
           SizedBox.shrink();
     }
   }
